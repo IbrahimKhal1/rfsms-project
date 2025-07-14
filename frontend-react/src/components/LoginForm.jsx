@@ -1,80 +1,62 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
-const LoginForm = ({ onLogin }) => {
+const LoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    try {
+      const res = await axios.post('http://localhost:5000/api/auth/login', {
+        username,
+        password,
+      });
 
-    const res = await fetch('http://localhost:5000/api/auth/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ username, password }),
-    });
+      const { token, user } = res.data;
 
-    const data = await res.json();
+      localStorage.setItem('token', token);
+      localStorage.setItem('role', user.role);
 
-    if (res.ok) {
-      localStorage.setItem('token', data.token);
-      alert('Login successful!');
-      onLogin(data.token); // Pass token to parent
-    } else {
-      alert(data.error || 'Login failed');
+      if (user.role === 'Admin') {
+        navigate('/dashboard');
+      } else if (user.role === 'Attendant') {
+        navigate('/attendant');
+      } else {
+        navigate('/login');
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
+    <form onSubmit={handleSubmit}>
       <h2>Login</h2>
+      {error && <p className="text-danger">{error}</p>}
       <input
         type="text"
-        placeholder="Username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
-        style={styles.input}
+        placeholder="Username"
+        className="form-control mb-2"
         required
       />
       <input
         type="password"
-        placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        style={styles.input}
+        placeholder="Password"
+        className="form-control mb-2"
         required
       />
-      <button type="submit" style={styles.button}>Login</button>
+      <button type="submit" className="btn btn-primary">Login</button>
     </form>
   );
-};
-
-const styles = {
-  form: {
-    maxWidth: '400px',
-    margin: '100px auto',
-    padding: '20px',
-    border: '1px solid #ccc',
-    borderRadius: '8px',
-    fontFamily: 'Arial',
-  },
-  input: {
-    display: 'block',
-    width: '100%',
-    padding: '10px',
-    margin: '10px 0',
-    fontSize: '16px',
-  },
-  button: {
-    width: '100%',
-    padding: '10px',
-    backgroundColor: '#007bff',
-    color: '#fff',
-    border: 'none',
-    fontSize: '16px',
-    cursor: 'pointer',
-  }
 };
 
 export default LoginForm;

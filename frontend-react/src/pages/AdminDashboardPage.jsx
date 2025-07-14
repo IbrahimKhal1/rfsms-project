@@ -7,15 +7,17 @@ import FuelList from '../components/FuelList';
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
   const [token, setToken] = useState('');
-
+  
   useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (!storedToken) {
-      navigate('/login'); // Redirect to login if no token
-    } else {
-      setToken(storedToken);
-    }
-  }, [navigate]);
+  const storedToken = localStorage.getItem('token');
+  const storedRole = localStorage.getItem('role');
+
+  if (!storedToken || storedRole !== 'Admin') {
+    navigate('/login');
+  } else {
+    setToken(storedToken);
+  }
+}, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -23,19 +25,21 @@ const AdminDashboardPage = () => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>🚀 Admin Dashboard</h1>
-      <button onClick={handleLogout} style={{ float: 'right', marginBottom: '20px' }}>
-        Logout
-      </button>
+    <div className="container mt-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1 className="text-primary">🚀 Admin Dashboard</h1>
+        <button className="btn btn-danger" onClick={handleLogout}>
+          Logout
+        </button>
+      </div>
 
-      <div style={{ marginTop: '60px' }}>
+      <div className="mb-5">
         <AddFuelForm token={token} />
       </div>
 
       <hr />
 
-      <div style={{ marginTop: '30px' }}>
+      <div>
         <FuelList token={token} />
       </div>
     </div>
